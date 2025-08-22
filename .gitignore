@@ -1,0 +1,17 @@
+# Laravel (back/)
+back/vendor/
+back/.env
+back/storage/logs/*
+back/storage/framework/cache/*
+back/storage/framework/sessions/*
+back/storage/framework/views/*
+back/bootstrap/cache/*
+
+# React (front/)
+front/node_modules/
+front/build/
+front/.env
+
+# General
+.DS_Store
+*.log
