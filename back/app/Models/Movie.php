@@ -16,4 +16,8 @@ class Movie extends Model
         'release_year',
     ];
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

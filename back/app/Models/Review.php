@@ -15,4 +15,9 @@ class Review extends Model
         'rating',
         'comment',
     ];
+
+    public function movie()
+    {
+        return $this->belongsTo(Movie::class);
+    }
 }
