@@ -13,8 +13,9 @@ Route::get('/movies/search', [MovieController::class, 'search']);
 Route::get('/movies/{id}', [MovieController::class, 'show']);
 Route::post('/movies/from-tmdb', [MovieController::class, 'createFromTMDB']);
 
+Route::get('/reviews', [ReviewController::class, 'index']);
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/reviews', [ReviewController::class, 'index']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/reviews/{id}', [ReviewController::class, 'show']);
 });
