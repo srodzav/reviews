@@ -10,7 +10,7 @@ class ReviewController extends Controller
 {
     public function index()
     {
-        $reviews = Review::with('movie')->get();
+        $reviews = Review::with('movie')->orderByDesc('id')->get();
         return response()->json($reviews);
     }
 
