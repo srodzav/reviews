@@ -20,10 +20,17 @@ class MovieController extends Controller
         $request->validate([
             'name' => 'required|string',
             'director' => 'required|string', 
-            'release_year' => 'required|integer' . date('Y')
+            'release_year' => 'required|integer' . date('Y'),
+            'poster_path' => 'nullable|string',
+            'poster_url' => 'nullable|url'
         ]);
 
-        $movie = Movie::create($request->all());
+        $data = $request->only(['name', 'director', 'release_year', 'poster_path', 'poster_url']);
+        if (empty($data['poster_url']) && !empty($data['poster_path'])) {
+            $data['poster_url'] = 'https://image.tmdb.org/t/p/w342/' . ltrim($data['poster_path'], '/');
+        }
+
+        $movie = Movie::create($data);
         return response()->json($movie, 201);
     }
 
@@ -100,15 +107,22 @@ class MovieController extends Controller
             }
         }
 
-        $movie = Movie::firstOrCreate(
-            ['name' => $title, 'release_year' => $release_year],
-            ['director' => $director]
+        $poster_path = $data['poster_path'] ?? null;
+        $poster_url = $poster_path ? 'https://image.tmdb.org/t/p/w342/' . ltrim($poster_path, '/') : null;
+
+        $movie = Movie::updateOrCreate(
+            ['tmdb_id' => $tmdbId],
+            [
+                'name' => $title,
+                'release_year' => $release_year,
+                'director' => $director,
+                'poster_path' => $poster_path,
+                'poster_url' => $poster_url
+            ]
         );
 
-        if (Schema::hasColumn('movies', 'tmdb_id')) {
-            if (empty($movie->tmdb_id)) {
-                $movie->update(['tmdb_id' => $tmdbId]);
-            }
+        if (empty($movie->tmdb_id)) {
+            $movie->update(['tmdb_id' => $tmdbId]);
         }
 
         return response()->json($movie, $movie->wasRecentlyCreated ? 201 : 200);

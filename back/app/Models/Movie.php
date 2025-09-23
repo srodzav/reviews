@@ -14,6 +14,9 @@ class Movie extends Model
         'name',
         'director',
         'release_year',
+        'tmdb_id',
+        'poster_path',
+        'poster_url',
     ];
 
     public function reviews()
