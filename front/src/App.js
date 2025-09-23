@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './index.css';
 import { fetchReviews, login, logout, searchMovies, createMovieFromTmdb, createReview } from './api';
+import ProfileHeader from './components/ProfileHeader';
+import HorizontalCarousel from './components/HorizontalCarousel';
+import ReviewCard from './components/ReviewCard';
 
 function App() {
   const [reviews, setReviews] = useState([]);
@@ -8,13 +11,13 @@ function App() {
   const [err, setErr] = useState(null);
 
   // Auth components
-  const [username, setUsername] = useState('admin');
+  const [username] = useState('admin');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('authUser')); } catch { return null; }
   });
 
-  // Review componentes
+  // Review components
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -23,7 +26,7 @@ function App() {
   const [rating, setRating] = useState(4);
   const debounceRef = useRef(null);
 
-
+  // Fetch reviews
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -39,6 +42,7 @@ function App() {
     return () => { mounted = false; };
   }, []);
 
+  // Auth handlers
   async function handleLogin(e) {
     e?.preventDefault();
     try {
@@ -51,6 +55,7 @@ function App() {
     }
   }
 
+  // Auth handlers
   async function handleLogout() {
     try {
       await logout();
@@ -62,6 +67,7 @@ function App() {
     }
   }
 
+  // Review form handlers
   function openForm() {
     setShowForm(true);
     setQuery('');
@@ -71,6 +77,7 @@ function App() {
     setRating(4);
   }
 
+  // Debounced movie search
   useEffect(() => {
     if (!query) {
       setSuggestions([]);
@@ -89,9 +96,9 @@ function App() {
     return () => clearTimeout(debounceRef.current);
   }, [query]);
 
+  // Handle selecting a movie suggestion
   async function handleSelectSuggestion(item) {
     try {
-      // ensure movie exists in backend (creates/returns movie)
       const movie = await createMovieFromTmdb(item.tmdb_id);
       setSelectedMovie(movie);
       setQuery('');
@@ -102,6 +109,7 @@ function App() {
     }
   }
 
+  // Handle review submission
   async function handleSubmitReview(e) {
     e.preventDefault();
     if (!selectedMovie || !selectedMovie.id) {
@@ -115,7 +123,7 @@ function App() {
         comment: comment || null
       };
       const data = await createReview(payload);
-      setReviews(prev => [data, ...prev]);
+      setReviews(prev => [data, ...prev]); // reorder reviews, newest first
       setShowForm(false);
       setSelectedMovie(null);
       setComment('');
@@ -127,54 +135,69 @@ function App() {
     }
   }
 
-  return (
-    <div className="container">
-      <header className="mb-6">
-        <h1 className="text-3xl font-extrabold text-gray-900">My Reviews</h1>
-        <p className="text-sm text-gray-600">Películas reseñadas</p>
+  // Prepare recent movies for carousel (from reviews)
+  const recentMovies = [];
+  const seen = new Set();
+  for (const r of reviews) {
+    const m = r.movie || {};
+    const id = m.id || m.tmdb_id;
+    if (!id) continue;
+    if (!seen.has(id)) {
+      seen.add(id);
+      recentMovies.push({ id, name: m.name || m.title, poster_url: m.poster_url, poster_path: m.poster_path, release_year: m.release_year || (m.release_date ? m.release_date.slice(0,4) : undefined) });
+    }
+    if (recentMovies.length >= 8) break;
+  }
 
-        <div className="mt-4 flex items-center gap-4">
-          {!user ? (
+  return (
+    <div className="min-h-screen bg-gray-900 text-gray-100">
+      <ProfileHeader title="My Reviews" />
+
+      <div className="max-w-4xl mx-auto px-6 py-6">
+        <div className="flex justify-between items-center mb-4">
+          { /* User info */ }
+          { !user ? (
             <form onSubmit={handleLogin} className="flex items-center gap-2">
-              <div className="text-sm text-gray-700">Usuario: <strong>{username}</strong></div>
-              <input
-                className="border p-2"
-                placeholder="password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
-              <button className="btn" type="submit">Login</button>
+              <div className="text-sm text-gray-300">Usuario: <strong className="text-white">{username}</strong></div>
+              <input className="border rounded px-2 py-1 bg-gray-800 text-white" placeholder="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+              <button className="px-3 py-1 bg-indigo-600 rounded text-white" type="submit">Login</button>
             </form>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="text-sm text-gray-700">Logueado como <strong>{user.username || user.name || 'admin'}</strong></div>
-              <button className="btn" onClick={handleLogout}>Logout</button>
-
-              <button className="btn" onClick={openForm}>Write review</button>
+              <div className="text-sm text-gray-300">logged as <strong className="text-white">{user.username || user.name || 'admin'}</strong></div>
+              <button className="px-3 py-1 bg-gray-700 rounded text-white" onClick={handleLogout}>Logout</button>
+              <button className="px-3 py-1 bg-indigo-600 rounded text-white" onClick={openForm}>Write review</button>
             </div>
           )}
         </div>
-      </header>
 
-      <main>
+        {/* Carousel */}
+        <section className="mb-6">
+          <div className="flex justify-between items-baseline mb-2">
+            <h2 className="text-lg font-semibold text-white">Recently watched</h2>
+          </div>
+          <HorizontalCarousel items={recentMovies} onClickCard={(it) => {
+            if (user) {
+              setSelectedMovie({ id: it.id, name: it.name, poster_url: it.poster_url, release_year: it.release_year });
+              setShowForm(true);
+            }
+          }} />
+        </section>
+
+        {/* Form */}
         {showForm && (
-          <section className="mb-6 bg-white p-4 rounded shadow">
-            <h2 className="font-semibold mb-2">Nueva review</h2>
+          <section className="mb-6 bg-gray-800 p-4 rounded">
+            <h3 className="text-white font-semibold mb-2">New review</h3>
 
-            <div className="mb-2">
-              <label className="block text-sm text-gray-700">Buscar película</label>
-              <input
-                className="border p-2 w-full"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Escribe título..."
-              />
+            <div className="mb-3">
+              <label className="text-sm text-gray-300 block mb-1">Search movie</label>
+              <input className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" value={query} onChange={e => setQuery(e.target.value)} placeholder="Type title..." />
               {suggestions.length > 0 && (
-                <ul className="border mt-1 max-h-40 overflow-auto bg-white">
+                <ul className="bg-gray-800 border border-gray-700 mt-2 rounded max-h-44 overflow-auto">
                   {suggestions.map(s => (
-                    <li key={s.tmdb_id} className="p-2 hover:bg-gray-100 cursor-pointer" onClick={() => handleSelectSuggestion(s)}>
-                      {s.title} {s.release_year ? `(${s.release_year})` : ''}
+                    <li key={s.tmdb_id} className="p-2 hover:bg-gray-700 cursor-pointer" onClick={() => handleSelectSuggestion(s)}>
+                      <div className="text-sm font-medium">{s.title}</div>
+                      <div className="text-xs text-gray-400">{s.release_year}</div>
                     </li>
                   ))}
                 </ul>
@@ -182,55 +205,44 @@ function App() {
             </div>
 
             {selectedMovie && (
-              <div className="mb-2">
-                <div className="text-sm font-medium">{selectedMovie.name} {selectedMovie.release_year ? `(${selectedMovie.release_year})` : ''}</div>
-                <div className="text-xs text-gray-500">Director: {selectedMovie.director || '—'}</div>
+              <div className="mb-3 text-gray-200">
+                <div className="font-medium">{selectedMovie.name} {selectedMovie.release_year ? `(${selectedMovie.release_year})` : ''}</div>
+                <div className="text-xs text-gray-400">Director: {selectedMovie.director || '—'}</div>
               </div>
             )}
+
             {selectedMovie && (
               <form onSubmit={handleSubmitReview}>
-                <div className="mb-2">
-                  <label className="block text-sm text-gray-700">Comentario</label>
-                  <textarea className="border p-2 w-full" rows="4" value={comment} onChange={e => setComment(e.target.value)} />
+                <div className="mb-3">
+                  <label className="text-sm text-gray-300 block mb-1">Comment</label>
+                  <textarea className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" rows="4" value={comment} onChange={e => setComment(e.target.value)} />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-700">Puntuación (1-5)</label>
-                  <input type="number" min="1" max="5" value={rating} onChange={e => setRating(e.target.value)} className="border p-2 w-24" />
+                  <label className="text-sm text-gray-300 block mb-1">Rating (1-5)</label>
+                  <input type="number" min="1" max="5" value={rating} onChange={e => setRating(e.target.value)} className="w-24 px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" />
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="btn" type="submit">Enviar review</button>
-                  <button type="button" className="btn" onClick={() => setShowForm(false)}>Cancelar</button>
+                  <button className="px-3 py-2 bg-indigo-600 rounded text-white" type="submit">Submit</button>
+                  <button type="button" className="px-3 py-2 bg-gray-700 rounded text-white" onClick={() => setShowForm(false)}>Cancelar</button>
                 </div>
               </form>
             )}
 
-            {err && <div className="text-red-600 mt-2">{err}</div>}
+            {err && <div className="text-red-400 mt-2">{err}</div>}
           </section>
         )}
 
-        {loading && <div>Cargando reviews...</div>}
-        {err && <div className="text-red-600">Error: {err}</div>}
-        {!loading && !err && reviews.length === 0 && <div>No hay reviews aún.</div>}
-        <div className="space-y-4 mt-4">
-          {reviews.map(r => {
-            const m = r.movie || {};
-            return (
-              <article key={r.id} className="bg-white p-4 rounded shadow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{m.name || '—' } {m.release_year ? `(${m.release_year})` : ''}</h3>
-                    <div className="text-sm text-gray-500">Director: {m.director || '—'}</div>
-                  </div>
-                  <div className="text-2xl font-bold text-indigo-600">{r.rating}</div>
-                </div>
-                <p className="mt-2 text-gray-700">{r.comment || <span className="text-gray-400">Sin comentario</span>}</p>
-              </article>
-            );
-          })}
-        </div>
-      </main>
+        {/* Reviews list */}
+        <section>
+          {loading && <div className="text-gray-300">Loading reviews...</div>}
+          {!loading && reviews.length === 0 && <div className="text-gray-400">No reviews yet.</div>}
+          <div className="space-y-4 mt-4">
+            {reviews.map(r => <ReviewCard key={r.id} review={r} />)}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
