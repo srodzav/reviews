@@ -26,6 +26,9 @@ function App() {
   const [rating, setRating] = useState(4);
   const debounceRef = useRef(null);
 
+  // Login modal
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   // Fetch reviews
   useEffect(() => {
     let mounted = true;
@@ -50,6 +53,7 @@ function App() {
       setUser(data.user || { username });
       localStorage.setItem('authUser', JSON.stringify(data.user || { username }));
       setPassword('');
+      setShowLoginModal(false);
     } catch (error) {
       setErr(String(error));
     }
@@ -151,25 +155,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
-      <ProfileHeader title="My Reviews" />
+      <ProfileHeader title="My Reviews" user={user} onOpenForm={openForm} />
 
       <div className="max-w-4xl mx-auto px-6 py-6">
-        <div className="flex justify-between items-center mb-4">
-          { /* User info */ }
-          { !user ? (
-            <form onSubmit={handleLogin} className="flex items-center gap-2">
-              <div className="text-sm text-gray-300">Usuario: <strong className="text-white">{username}</strong></div>
-              <input className="border rounded px-2 py-1 bg-gray-800 text-white" placeholder="password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-              <button className="px-3 py-1 bg-indigo-600 rounded text-white" type="submit">Login</button>
-            </form>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-gray-300">logged as <strong className="text-white">{user.username || user.name || 'admin'}</strong></div>
-              <button className="px-3 py-1 bg-gray-700 rounded text-white" onClick={handleLogout}>Logout</button>
-              <button className="px-3 py-1 bg-indigo-600 rounded text-white" onClick={openForm}>Write review</button>
-            </div>
-          )}
-        </div>
 
         {/* Carousel */}
         <section className="mb-6">
@@ -243,6 +231,37 @@ function App() {
           </div>
         </section>
       </div>
+
+      {/* Info footer */}
+      <footer className="py-4 text-center">
+        <button className="text-sm text-gray-400 hover:text-white" onClick={() => setShowLoginModal(true)}>
+          Sebastian Rodriguez
+        </button>
+      </footer>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-60" onClick={() => setShowLoginModal(false)} />
+          <div className="relative bg-gray-800 text-white rounded-lg p-6 w-full max-w-md z-10">
+            <form onSubmit={handleLogin} className="space-y-3">
+              <input
+                className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600"
+                placeholder="password"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <button type="submit" className="px-3 py-2 bg-indigo-600 rounded">Login</button>
+              </div>
+            </form>
+            {err && <div className="text-red-400 mt-3">{err}</div>}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
