@@ -18,7 +18,7 @@ class ReviewController extends Controller
     {
         $request->validate([
             'movie_id' => 'required|exists:movies,id',
-            'rating' => 'required|integer|min:0|max:5',
+            'rating' => 'required|numeric|min:0|max:5',
             'comment' => 'nullable|string'
         ]);
 
@@ -37,7 +37,7 @@ class ReviewController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'rating' => 'sometimes|integer|min:0|max:5',
+            'rating' => 'sometimes|numeric|min:0|max:5',
             'comment' => 'sometimes|nullable|string'
         ]);
 
