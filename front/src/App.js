@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import './index.css';
 import { fetchReviews, login, logout, searchMovies, createMovieFromTmdb, createReview, fetchFavoriteMovies } from './api';
 import ProfileHeader from './components/ProfileHeader';
@@ -34,6 +34,9 @@ function App() {
   const [favoriteMovies, setFavoriteMovies] = useState([]);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Sorting 
+  const [sortBy, setSortBy] = useState('newest');
+
   // Fetch reviews
   useEffect(() => {
     let mounted = true;
@@ -51,6 +54,27 @@ function App() {
     })();
     return () => { mounted = false; };
   }, []);
+
+  // Sorted reviews
+  const sortedReviews = useMemo(() => {
+    if (!Array.isArray(reviews)) return [];
+    const list = [...reviews];
+
+    // order by rating desc
+    if (sortBy === 'rating') {
+      list.sort((a, b) => {
+        const ra = parseFloat(a.rating) || 0;
+        const rb = parseFloat(b.rating) || 0;
+        if (rb !== ra) return rb - ra;
+        return (b.id || 0) - (a.id || 0);
+      });
+      return list;
+    }
+
+    // default = newest [created_at]
+    list.sort((a, b) => (b.id || 0) - (a.id || 0));
+    return list;
+  }, [reviews, sortBy]);
 
   // Auth handlers
   async function handleLogin(e) {
@@ -237,12 +261,31 @@ function App() {
           </section>
         )}
 
+        {/* Sort controls */}
+        <div className="mb-4 flex gap-3 items-center">
+          <div className="text-sm text-gray-300">Sort:</div>
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1 rounded ${sortBy === 'newest' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+              onClick={() => setSortBy('newest')}
+            >
+              Newest
+            </button>
+            <button
+              className={`px-3 py-1 rounded ${sortBy === 'rating' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+              onClick={() => setSortBy('rating')}
+            >
+              Top rating
+            </button>
+          </div>
+        </div>
+
         {/* Reviews list */}
         <section>
           {loading && <div className="text-gray-300">Loading reviews...</div>}
           {!loading && reviews.length === 0 && <div className="text-gray-400">No reviews yet.</div>}
           <div className="space-y-4 mt-4">
-            {reviews.map(r => <ReviewCard key={r.id} review={r} />)}
+            {sortedReviews.map(r => <ReviewCard key={r.id} review={r} />)}
           </div>
         </section>
       </div>
