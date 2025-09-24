@@ -1,4 +1,10 @@
-const API_BASE = 'http://127.0.0.1:8000/api';
+/*
+  PLEASE FOR THE LOVE OF GOD CHANGE API_BASE TO YOUR DEVICE'S IP THANKS 
+  - sebastian
+*/
+
+// const API_BASE = 'http://127.0.0.1:8000/api'; // FOR LOCAL DEVELOPMENT
+const API_BASE = 'http://192.168.100.33:8000/api'; // FOR MOBILE TESTING 
 
 // User login
 export async function login({ username, password }) {

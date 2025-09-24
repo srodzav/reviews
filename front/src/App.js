@@ -4,6 +4,7 @@ import { fetchReviews, login, logout, searchMovies, createMovieFromTmdb, createR
 import ProfileHeader from './components/ProfileHeader';
 import HorizontalCarousel from './components/HorizontalCarousel';
 import ReviewCard from './components/ReviewCard';
+import StarInput from './components/StarInput';
 
 function App() {
   const [reviews, setReviews] = useState([]);
@@ -207,8 +208,8 @@ function App() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="text-sm text-gray-300 block mb-1">Rating (1-5)</label>
-                  <input type="number" min="1" max="5" value={rating} onChange={e => setRating(e.target.value)} className="w-24 px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" />
+                  <label className="text-sm text-gray-300 block mb-1">Rating</label>
+                  <StarInput value={rating} onChange={(v) => setRating(v)} size={26} />
                 </div>
 
                 <div className="flex gap-2">
@@ -234,6 +235,10 @@ function App() {
 
       {/* Info footer */}
       <footer className="py-4 text-center">
+        <button className="text-sm text-gray-400 hover:text-white" onClick={handleLogout}>
+          2025 
+        </button>
+        &nbsp;·&nbsp;
         <button className="text-sm text-gray-400 hover:text-white" onClick={() => setShowLoginModal(true)}>
           Sebastian Rodriguez
         </button>
