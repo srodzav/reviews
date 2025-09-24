@@ -8,6 +8,7 @@ use App\Http\Controllers\ReviewController;
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
 Route::get('/movies', [MovieController::class, 'index']);
+Route::get('/movies/favorites', [MovieController::class, 'favorites']);
 Route::get('/movies/search', [MovieController::class, 'search']);
 Route::get('/movies/{id}', [MovieController::class, 'show']);
 Route::post('/movies/from-tmdb', [MovieController::class, 'createFromTMDB']);

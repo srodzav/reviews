@@ -17,6 +17,11 @@ class Movie extends Model
         'tmdb_id',
         'poster_path',
         'poster_url',
+        'favorite',
+    ];
+
+    protected $casts = [
+        'favorite' => 'boolean',
     ];
 
     public function reviews()

@@ -15,6 +15,16 @@ class MovieController extends Controller
         return response()->json($movies);
     }
 
+    public function favorites()
+    {
+        $movies = Movie::where('favorite', true)
+            ->orderByDesc('id')
+            ->take(5)
+            ->get();
+            
+        return response()->json($movies);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
