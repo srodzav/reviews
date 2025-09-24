@@ -3,8 +3,7 @@
   - sebastian
 */
 
-// const API_BASE = 'http://127.0.0.1:8000/api'; // FOR LOCAL DEVELOPMENT
-const API_BASE = 'http://192.168.100.33:8000/api'; // FOR MOBILE TESTING 
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000/api';
 
 // User login
 export async function login({ username, password }) {
