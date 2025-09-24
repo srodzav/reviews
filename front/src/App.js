@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './index.css';
-import { fetchReviews, login, logout, searchMovies, createMovieFromTmdb, createReview } from './api';
+import { fetchReviews, login, logout, searchMovies, createMovieFromTmdb, createReview, fetchFavoriteMovies } from './api';
 import ProfileHeader from './components/ProfileHeader';
 import HorizontalCarousel from './components/HorizontalCarousel';
 import ReviewCard from './components/ReviewCard';
@@ -30,13 +30,19 @@ function App() {
   // Login modal
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  // Fetch favorite movies
+  const [favoriteMovies, setFavoriteMovies] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+
   // Fetch reviews
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const data = await fetchReviews();
+        const favs = await fetchFavoriteMovies();
         if (mounted) setReviews(Array.isArray(data) ? data : []);
+        if (mounted) setFavoriteMovies(Array.isArray(favs) ? favs : []);
       } catch (e) {
         if (mounted) setErr(String(e));
       } finally {
@@ -165,12 +171,15 @@ function App() {
           <div className="flex justify-between items-baseline mb-2">
             <h2 className="text-lg font-semibold text-white">Recently watched</h2>
           </div>
-          <HorizontalCarousel items={recentMovies} onClickCard={(it) => {
-            if (user) {
-              setSelectedMovie({ id: it.id, name: it.name, poster_url: it.poster_url, release_year: it.release_year });
-              setShowForm(true);
-            }
-          }} />
+          <HorizontalCarousel items={recentMovies}/>
+        </section>
+
+        {/* Carousel */}
+        <section className="mb-6">
+          <div className="flex justify-between items-baseline mb-2">
+            <h2 className="text-lg font-semibold text-white">Favorite films</h2>
+          </div>
+          <HorizontalCarousel items={favoriteMovies}/>
         </section>
 
         {/* Form */}
@@ -207,9 +216,14 @@ function App() {
                   <textarea className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" rows="4" value={comment} onChange={e => setComment(e.target.value)} />
                 </div>
 
-                <div className="mb-4">
+                <div className="flex gap-4 mb-4">
                   <label className="text-sm text-gray-300 block mb-1">Rating</label>
                   <StarInput value={rating} onChange={(v) => setRating(v)} size={26} />
+
+                  <div className="" />
+                  <input type="checkbox" className="w-5 h-5" checked={isFavorite} onChange={e => setIsFavorite(e.target.checked)} />
+                  <label className="ms-0 text-sm font-medium text-gray-900 dark:text-gray-300">Favorite</label>
+
                 </div>
 
                 <div className="flex gap-2">

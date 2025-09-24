@@ -74,6 +74,19 @@ export async function createMovieFromTmdb(tmdb_id) {
   return data;
 }
 
+// Get favorites movies
+export async function fetchFavoriteMovies() {
+  const res = await fetch(`${API_BASE}/movies/favorites`);
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+    return data;
+  } catch {
+    throw new Error(`Invalid response from favorites: ${text.slice(0,200)}`);
+  }
+}
+
 // yap yap yap
 function setToken(token) {
   if (token) localStorage.setItem('auth_token', token);
